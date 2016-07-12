@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>KeyKit</title>
+    <label>
+        <input type="checkbox" data-js="btn-rec"/> 
+        Rec
+    </label>
+    <p class="timer"></p>
+</head>
+<body>
+    <script src="jquery.min.js"></script>
+    <script src="howler.min.js"></script>
+    <script type="text/javascript">
+            
+
+        (function(win, doc, $){
+            'use strict';
+
+
+            var sounds = {
+                a: "sounds/a.mp3",
+                b: "sounds/b.mp3",
+                c: "sounds/c.mp3",
+                d: "sounds/d.mp3",
+                e: "sounds/e.mp3"
+            },
+
+            keyWich = {
+                65: "a",
+                66: "b",
+                67: "c",
+                68: "d",
+                69: "e"
+            },
+            $doc = $(doc),
+            $rec = $("[data-js=btn-rec]"),
+            rec = false,
+            timeInterval,
+            timer = 0,
+            melody = {};
+
+
+            for(var sound in sounds) {
+                window["audio" + sound] = new Howl({
+                    urls: [sounds[sound]]
+                });
+            }
+
+            $doc.on("keyup", function(e) {
+
+                var keyCode = e.which,
+                    keyChar = keyWich[keyCode];
+                if(keyChar !== undefined && "audio" + keyChar !== undefined) {
+                    window["audio" + keyChar].play();
+                    if (rec === false && $rec.is(":checked")) {
+                        rec = true;
+                        $doc.trigger("rec-start");
+                        console.log(keyChar, timer);
+                        savingMelody(keyChar, timer);
+                    } else {
+                        if ($rec.is(":checked")) {
+                            console.log(keyChar, timer);
+                            savingMelody(keyChar, timer);
+                        }
+                    }
+
+                }
+
+                if(keyCode === 32) {
+                    $rec.trigger("click");
+                }
+            });
+
+            $rec.on("change", function (){
+                if(!this.checked) {
+                    rec = false;
+                    savingMelody(0, timer);
+                    $doc.trigger("rec-stop");
+                }
+            })
+
+            $doc.on("rec-start", function() {
+                console.log('rec-start');
+                timeInterval = setInterval(function() {
+                    ++timer;
+                    $(".timer").text(timer/100);
+                }, 10);
+
+
+                
+
+            });
+
+            $doc.on("rec-stop", function() {
+                console.log('rec-stop');
+                clearInterval(timeInterval);
+                $doc.trigger("play-rec");
+
+                console.log(melody);
+            });
+
+            $doc.on("play-rec", function() {
+                console.log('play-rec');
+                var time = -1,
+                    int,
+                    keys = Object.keys(melody),
+                    last = keys[keys.length-1],
+
+                int = setInterval(function() {
+                    ++time;
+                    // console.log(time);
+                    if (melody[time] !== undefined && melody[time] !== 0) {
+                        window["audio" + melody[time]].play();
+                        console.log(time/100);
+                    }
+                    $(".timer").text(time);
+                    if (time === parseInt(last)) {
+                        time = -1;
+                        // console.clear();
+                    }
+
+
+
+                }, 10);
+            });
+
+            function savingMelody(letter, timer) {
+                melody[timer] = letter;
+            }
+
+            function playMelody(melody) {
+                for(var tone in melody) {
+
+                }
+            }
+
+        }(window, window.document, window.jQuery));
+
+    </script>
+</body>
+</html>
